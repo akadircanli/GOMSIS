@@ -1,0 +1,54 @@
+import RPi.GPIO as GPIO 
+import time 
+import subprocess 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(17,GPIO.IN)
+def send_mail(): //send mail fonksiyonu oluþturuldu.
+	print('Fotograf cekmeye hazirlanýyor')
+	subprocess.call(['fswebcam','--no-banner','-r 640x480', 'image.jpg'])
+	print('fotograf kaydedildi')
+	print('email gonderilmeye hazir!')
+	msg = MIMEMultipart()
+	msg['From'] ='kadircanli78@gmail.com'
+	msg['To'] =  'muhendis.ugraslari@gmail.com'
+	msg['Subject']= "Merhaba! Yine Kapinda Birileri :)"
+	body = "Hey! Kapindaki kisinin gitmeye niyeti yok :) Fotografina bakabilirsin"
+	msg.attach(MIMEText(body, 'plain'))
+
+	#FILE PART
+	filename = 'image.jpg'
+	attachment = open(filename, 'rb')
+	part = MIMEBase('application', 'octet_stream')
+	part.set_payload((attachment).read())
+	encoders.encode_base64(part)
+	part.add_header('Content-Disposition', 'attachment; filename= '+filename)
+	msg.attach(part)
+	#########
+
+	text = msg.as_string()
+	server= smtplib.SMTP('smtp.gmail.com', 587)
+	server.starttls()
+	server.login("kadircanli78@gmail.com","sifre")
+	server.sendmail("kadircanli78@gmail.com","muhendis.ugraslari@gmail.com", text )
+	server.quit()
+	print('email gonderildi.')
+
+while True:
+	i=GPIO.input(17)
+	if i==0:
+		print('algilanmadi',i)
+		time.sleep(0.3)
+	elif i==1:
+		print('algilandi',i)
+		send_mail()
+		time.sleep(0.3)
+	
+	
